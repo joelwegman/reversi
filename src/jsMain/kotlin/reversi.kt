@@ -112,7 +112,18 @@ fun moveTo(event: Event, element: HTMLElement): Unit {
 	val x = (element.attributes.getNamedItem("data-x")?.value?:"0").toIntOrNull()?:0
 	val y = (element.attributes.getNamedItem("data-y")?.value?:"0").toIntOrNull()?:0
 
+	// TODO: test this more, but it seems to be working(?)
 	boardState = newState(boardState, x, y)
+	if (getValidMoves(boardState).flatten().filter( { it } ).count() == 0) {
+		val toggledState = BoardState(boardState.turn * -1, boardState.grid.toList())
+		if (getValidMoves(toggledState).flatten().filter( { it } ).count() == 0) {
+			js("alert('game over')")
+		}
+		else {
+			js("alert('no moves, skipped turn')")
+			boardState = toggledState
+		}
+	}
 	render(boardState)
 }
 
