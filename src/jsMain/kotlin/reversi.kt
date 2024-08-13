@@ -2,7 +2,6 @@ import kotlinx.browser.*
 import org.w3c.dom.*
 import org.w3c.dom.Element
 import org.w3c.dom.events.*
-import org.w3c.dom.events.Event
 
 val boardState = mapOf(
 	"turn" to 1,
@@ -44,10 +43,8 @@ fun render(state: Map<String, Any>) {
 				val link = """<a onclick="reversi.moveTo(event, this)" class="move" href="?x=$x&y=$y#board" data-x="$x" data-y="$y">"""
 				"""
 					${if (valid) link else ""}
-					<div class="square"">
-						<div class="piece p${playerNumber}">
-							${if (item != 0) "*" else ""}
-						</div>
+					<div class="square">
+						<div class="piece p${playerNumber} ${if (item != 0) "pip" else ""}"></div>
 					</div>
 					${if (valid) "</a>" else ""}
 				"""
