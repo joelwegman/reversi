@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Reversi</title>
+
+	<style>
+		#board {
+			cursor: not-allowed;
+			display: grid;
+			background-color: darkgray;
+			aspect-ratio: 1;
+			width: 64vh;
+			font-size: 6vh;
+			margin-top: 18vh;
+			margin-left: auto;
+			margin-right: auto;
+			grid-template-rows: repeat(8, 1fr);
+
+			.row {
+				display: grid;
+				grid-template-columns: repeat(8, 1fr);
+
+				a {
+					display: grid;
+				}
+
+				.square {
+					border: 1px solid gray;
+					display: flex;
+					justify-content: center;
+
+					&.valid:hover {
+						border: 1px solid yellow;
+						cursor: default;
+					}
+
+					.piece {
+						height: 100%;
+						align-content: center;
+					}
+				}
+				.p0 {
+					color: white;
+				}
+				.p1 {
+					color: black;
+				}
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+	<div id="board"></div>
+
+	<script src="reversi.js"></script>
+</body>
+
+</html>
