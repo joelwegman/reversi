@@ -1,12 +1,11 @@
 import kotlinx.browser.*
 import org.w3c.dom.*
-import org.w3c.dom.Element
 import org.w3c.dom.events.*
 
 // The two players are represented internally as 1 and -1.
 // 0 represents an empty square.
-// TODO: redo with 2d array instead?
 data class BoardState (val turn: Int, val grid: List<List<Int>>)
+
 var boardState = BoardState(1, listOf(
 	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
@@ -40,7 +39,7 @@ fun newState(state: BoardState, x0: Int, y0: Int): BoardState {
 		while (true) {
 			val x = origin.x + count * direction.x
 			val y = origin.y + count * direction.y
-			if (x >= 0 && x < 8 && y >= 0 && y < 8)
+			if (y in boardState.grid.indices && x in boardState.grid[0].indices)
 				coords.add(Vec2(x, y))
 			else
 				break
@@ -102,29 +101,39 @@ fun getValidMoves(state: BoardState): List<List<Boolean>> {
 	}
 }
 
+fun hasValidMoves(state: BoardState): Boolean {
+	return getValidMoves(boardState).flatten().filter( { it } ).count() > 0
+}
+
 // click event handler
 @JsExport
 fun moveTo(event: Event, element: HTMLElement): Unit {
 	event.preventDefault()
 	event.stopPropagation()
-
-	// TODO: find a cleaner and/or more idiomatic way of doing this
 	val x = (element.attributes.getNamedItem("data-x")?.value?:"0").toIntOrNull()?:0
 	val y = (element.attributes.getNamedItem("data-y")?.value?:"0").toIntOrNull()?:0
 
-	// TODO: test this more, but it seems to be working(?)
+	var gameOver = false
+	var skipTurn = false
 	boardState = newState(boardState, x, y)
-	if (getValidMoves(boardState).flatten().filter( { it } ).count() == 0) {
+	if (!hasValidMoves(boardState)) {
 		val toggledState = BoardState(boardState.turn * -1, boardState.grid.toList())
-		if (getValidMoves(toggledState).flatten().filter( { it } ).count() == 0) {
-			js("alert('game over')")
+		if (!hasValidMoves(toggledState)) {
+			gameOver = true
 		}
 		else {
-			js("alert('no moves, skipped turn')")
+			skipTurn = true
 			boardState = toggledState
 		}
 	}
 	render(boardState)
+
+	// TODO: use a modal instead
+	if (gameOver)
+		js("alert('Game over.')")
+	if (skipTurn) {
+		js("alert('Player has no moves, skipping turn')")
+	}
 }
 
 fun render(state: BoardState) {
