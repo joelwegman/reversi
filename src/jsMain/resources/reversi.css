@@ -65,11 +65,6 @@
 			display: grid;
 			grid-template-columns: repeat(8, 1fr);
 
-			a {
-				display: grid;
-				text-decoration: none;
-			}
-
 			.square {
 				border: 1px solid gray;
 				display: flex;
@@ -79,6 +74,13 @@
 					border: 1px solid yellow;
 					cursor: default;
 				}
+
+				a {
+					display: grid;
+					text-decoration: none;
+					height: 100%;
+					aspect-ratio: 1;
+				}
 			}
 		}
 	}
@@ -87,17 +89,13 @@
 		font-size: 4vh;
 		margin-top: 1rem;
 
-		.pip {
-			margin-right: 1rem;
+		.text {
+			display: inline;
 		}
 
 		a {
 			text-decoration: underline;
 			cursor: pointer;
-
-			&.restart {
-				margin-left: 1rem;
-			}
 		}
 	}
 }

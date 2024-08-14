@@ -16,7 +16,13 @@ kotlin {
 	}
 
 	sourceSets {
-		val commonMain by getting
+		val commonMain by getting {
+			dependencies {
+				implementation(kotlin("stdlib-js"))
+				implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+			}
+		}
+
 		val commonTest by getting {
 			dependencies {
 				implementation(libs.kotest.assertions.core)
@@ -28,6 +34,7 @@ kotlin {
 		}
 
 		val jsMain by getting
+
 		val jsTest by getting
 	}
 }

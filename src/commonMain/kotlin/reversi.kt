@@ -1,3 +1,8 @@
+import kotlinx.browser.*
+import kotlinx.html.*
+import kotlinx.html.dom.*
+import kotlinx.html.stream.*
+
 // convenience class for using .x and .y on points/vectors
 data class Vec2 (var x: Int, var y: Int)
 
@@ -6,7 +11,7 @@ class BoardState (
 	private val turn: Int = 1,
 
 	// this represents the game board, where 0 is an empty square
-	// NOTE: this is indexed as board[y][x] rather than board[x][y]
+	// NOTE: this is indexed as board[y][x] rather than board[x][y],
 	// so values can be manually supplied to the constructor in the same layout
 	// in source code as will be shown in the ui and when converted to a string,
 	// which also makes logging/debugging easier
@@ -57,49 +62,69 @@ class BoardState (
 
 	// render the board into HTML
 	fun toHTML(): String {
-		// TODO: use a real templating engine instead of this mess
-		return """<div id="score">
-				<div class="player p0 ${if (!gameOver && turn == 1) "active" else ""}">
-					<div class="pip p1"></div>
-					<div class="score">${scores[0]}</div>
-				</div>
-				<div class="player p1 ${if (!gameOver && turn == -1) "active" else ""}">
-					<div class="pip p-1"></div>
-					<div class="score">${scores[1]}</div>
-				</div>
-			</div>""" +
+		return buildString { appendHTML().
+			div {
+				id = "score"
+				div(classes = "player " + if (!gameOver && turn == 1) "active" else "") {
+					div(classes = "pip p1")
+					div(classes = "score") { + "${scores[0]}" }
+				}
+				div(classes = "player " + if (!gameOver && turn == -1) "active" else "") {
+					div(classes = "pip p-1")
+					div(classes = "score") { + "${scores[1]}" }
+				}
+			}
 
-			"""<div id="board">""" +
-			board.mapIndexed { y, row ->
-				"""<div class="row">""" +
-					row.mapIndexed { x, item ->
-						val valid = validMoves[y][x]
-						val link = """<a onclick="reversi.moveTo(event, this)" class="move" href="?x=$x&y=$y#board" data-x="$x" data-y="$y">"""
-						"""
-							${if (valid) link else ""}
-							<div class="square ${if (valid) "valid" else ""}">
-								<div class="piece p${item} ${if (item != 0) "pip" else ""}"></div>
-							</div>
-							${if (valid) "</a>" else ""}
-						"""
-					}.joinToString("") +
-				"</div>"
-			}.joinToString("") +
-			"</div>" +
+			appendHTML().div {
+				id = "board"
+				board.mapIndexed { y, row ->
+					div(classes = "row") {
+						row.mapIndexed { x, item ->
+							val valid = validMoves[y][x]
+							div(classes = "square ${item} " + if (valid) "valid" else "") {
+								div(classes = "piece p${item} " + if (item != 0) "pip" else "") {
+									if (valid)
+										a(classes = "move", href = "?x=$x&y=$y#board") {
+											attributes["data-x"] = "$x"
+											attributes["data-y"] = "$y"
+											onClick = "reversi.moveTo(event, this)"
+										}
+								}
+							}
+						}
+					}
+				}
+			}
 
-			"""<div id="message">""" +
+			appendHTML().div {
+				id = "message"
 				if (gameOver) {
 					when {
-						scores[0] > scores[1] -> """<div class="pip p1"></div>wins!"""
-						scores[1] > scores[0] -> """<div class="pip p-1"></div>wins!"""
-						else -> "Tied game!"
-					} + """<a class="restart" onclick="reversi.restart()">Restart</a>"""
+						scores[0] > scores[1] -> {
+							div(classes = "pip p1")
+							div(classes = "text") { + "wins!" }
+						}
+						scores[1] > scores[0] -> {
+							div(classes = "pip p-1")
+							div(classes = "text") { + "wins!" }
+						}
+						else -> div(classes = "text") { + "Tied game!" }
+					}
+					a(classes = "restart") {
+						onClick = "reversi.restart()"
+						+ "Restart"
+					}
 				} else if (!hasMoves) {
-					"""You have no moves. <a onclick="reversi.skipTurn(event)" href="?skip#board">Skip your turn.</a>"""
+					+ "You have no moves."
+					a("?skip#board") {
+						onClick = "reversi.skipTurn(event)"
+						+ "Skip your turn."
+					}
 				} else {
 					""
 				}
-			"</div>"
+			}
+		}
 	}
 
 	////
