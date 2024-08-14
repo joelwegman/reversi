@@ -5,51 +5,84 @@
 	<title>Reversi</title>
 
 	<!-- TODO: move this to a .css file -->
+	<!-- TODO: use CSS variables -->
+	<!-- TODO: use-prefered-color-scheme -->
+	<!-- TODO: make it look less like programmer art -->
 	<style>
-		#board {
-			cursor: not-allowed;
+		#game {
 			display: grid;
-			background-color: darkgray;
-			aspect-ratio: 1;
-			width: 64vh;
-			font-size: 6vh;
-			margin-top: 18vh;
+			grid-template-areas: "score" "board";
+			justify-content: center;
+			margin-top: 12vh;
 			margin-left: auto;
 			margin-right: auto;
-			grid-template-rows: repeat(8, 1fr);
 
-			.row {
-				display: grid;
-				grid-template-columns: repeat(8, 1fr);
+			.pip {
+				height: 85%;
+				aspect-ratio: 1;
+				border-radius: 50%;
+				display: inline-block;
+				margin: auto;
 
-				a {
-					display: grid;
-					text-decoration: none;
+				&.p1 {
+					background-color: white;
 				}
+				&.p-1 {
+					background-color: black;
+				}
+			}
 
-				.square {
-					border: 1px solid gray;
+			#score {
+				grid-area: score;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				width: 50%;
+				margin: auto;
+
+				.player {
+					font-size: 6vh;
 					display: flex;
-					justify-content: center;
+					flex-direction: column;
+					text-align: center;
 
-					&.valid:hover {
+					&.active {
 						border: 1px solid yellow;
-						cursor: default;
 					}
 
 					.pip {
-						height: 85%;
-						aspect-ratio: 1;
-						border-radius: 50%;
-						display: inline-block;
-						margin: auto;
+						width: 6vh;
+					}
+				}
+			}
+
+			#board {
+				grid-area: board;
+				cursor: not-allowed;
+				display: grid;
+				background-color: darkgray;
+				aspect-ratio: 1;
+				width: 64vh;
+				font-size: 6vh;
+				grid-template-rows: repeat(8, 1fr);
+
+				.row {
+					display: grid;
+					grid-template-columns: repeat(8, 1fr);
+
+					a {
+						display: grid;
+						text-decoration: none;
 					}
 
-					.p1 {
-						background-color: white;
-					}
-					.p-1 {
-						background-color: black;
+					.square {
+						border: 1px solid gray;
+						display: flex;
+						justify-content: center;
+
+						&.valid:hover {
+							border: 1px solid yellow;
+							cursor: default;
+						}
 					}
 				}
 			}
@@ -59,7 +92,7 @@
 </head>
 
 <body>
-	<div id="board"></div>
+	<section id="game"></section>
 
 	<script src="reversi.js"></script>
 </body>

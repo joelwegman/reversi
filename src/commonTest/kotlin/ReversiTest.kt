@@ -10,7 +10,7 @@ class ReversiTest : FunSpec({
 
 	test("skip turn") {
 		BoardState(
-			grid = listOf(
+			board = listOf(
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 				listOf( 0,  0,  0,  0,  1,  0,  0,  0),
@@ -29,7 +29,7 @@ class ReversiTest : FunSpec({
 
 	test("game over") {
 		BoardState(
-			grid = listOf(
+			board = listOf(
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
