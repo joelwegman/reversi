@@ -95,7 +95,7 @@ class BoardState (
 						else -> "Tied game!"
 					} + """<a class="restart" onclick="reversi.restart()">Restart</a>"""
 				} else if (!hasMoves) {
-					"""You have no moves. <a onclick="reversi.skipTurn()" href="?skip#board">Skip your turn.</a>"""
+					"""You have no moves. <a onclick="reversi.skipTurn(event)" href="?skip#board">Skip your turn.</a>"""
 				} else {
 					""
 				}

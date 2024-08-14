@@ -19,7 +19,9 @@ fun moveTo(event: Event, element: HTMLElement) {
 
 // skip turn event handler
 @JsExport
-fun skipTurn() {
+fun skipTurn(event: Event) {
+	event.preventDefault()
+	event.stopPropagation()
 	boardState = boardState.skipTurn()
 	render()
 }
