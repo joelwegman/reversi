@@ -55,7 +55,7 @@ class BoardState (
 
 	// the game is over when neither player has any valid moves
 	val gameOver: Boolean
-		get() = false
+		get() = skipTurn && BoardState(turn * -1, grid).skipTurn
 
 
 	// create a new state from an old one and the player's move coordinates
