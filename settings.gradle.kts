@@ -1,7 +1,7 @@
 rootProject.name = "reversi"
 
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-    }
+	repositories {
+		gradlePluginPortal()
+	}
 }

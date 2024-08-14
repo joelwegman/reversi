@@ -1,48 +1,27 @@
 import org.w3c.dom.*
 import org.w3c.dom.events.*
 
-var boardState = BoardState(1, listOf(
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-	listOf( 0,  0,  0,  1, -1,  0,  0,  0),
-	listOf( 0,  0,  0, -1,  1,  0,  0,  0),
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-	listOf( 0,  0,  0,  0,  0,  0,  0,  0),
-))
+// initial state
+var boardState = BoardState()
 
 // click event handler
 @JsExport
-fun moveTo(event: Event, element: HTMLElement): Unit {
+fun moveTo(event: Event, element: HTMLElement) {
 	event.preventDefault()
 	event.stopPropagation()
 	val x = (element.attributes.getNamedItem("data-x")?.value?:"0").toIntOrNull()?:0
 	val y = (element.attributes.getNamedItem("data-y")?.value?:"0").toIntOrNull()?:0
-
-	var gameOver = false
-	var skipTurn = false
-	boardState = newState(boardState, x, y)
-	if (!hasValidMoves(boardState)) {
-		val toggledState = BoardState(boardState.turn * -1, boardState.grid.toList())
-		if (!hasValidMoves(toggledState)) {
-			gameOver = true
-		}
-		else {
-			skipTurn = true
-			boardState = toggledState
-		}
-	}
-	render(boardState)
+	boardState = boardState.stateFromMove(x, y)
+	boardState.render()
 
 	// TODO: use a modal instead
-	if (gameOver)
+	if (boardState.gameOver)
 		js("alert('Game over.')")
-	if (skipTurn) {
+	if (boardState.skipTurn) {
 		js("alert('Player has no moves, skipping turn')")
 	}
 }
 
 fun main() {
-	render(boardState)
+	boardState.render()
 }

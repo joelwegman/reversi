@@ -1,116 +1,145 @@
 import kotlinx.browser.document
 
-// The two players are represented internally as 1 and -1.
-// 0 represents an empty square.
-data class BoardState (val turn: Int, val grid: List<List<Int>>)
+// convenience class for using .x and .y on points/vectors
+data class Vec2 (var x: Int, var y: Int)
 
-// create a new state from and old one and the player's move coordinates
-fun newState(state: BoardState, x0: Int, y0: Int): BoardState {
-    data class Vec2 (var x: Int, var y: Int)
+class BoardState (
+	// which player's turn is it? 1 (white) or -1 (black)
+	val turn: Int = 1,
 
-    val directions = listOf(
-        Vec2(0, -1),  // ↑
-        Vec2(-1, -1), // ↖
-        Vec2(-1, 0),  // ←
-        Vec2(-1, 1),  // ↙
-        Vec2(0, 1),   // ↓
-        Vec2(1, 1),   // ↘
-        Vec2(1, 0),   // →
-        Vec2(1, -1))  // ↗
+	// this represents the board, where 0 is an empty square
+	// NOTE: this is indexed as grid[y][x] rather than grid[x][y],
+	// which means that values can be manually supplied to the
+	// constructor in the same layout in source code as will be shown
+	// in the ui and when converted to a string, e.g. for logging
+	// or println debugging
+	val grid: List<List<Int>> = listOf(
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+		listOf( 0,  0,  0,  1, -1,  0,  0,  0),
+		listOf( 0,  0,  0, -1,  1,  0,  0,  0),
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+	),
+) {
+	// the cardinal directions with arrows showing screen-space orientation
+	private val directions: List<Vec2> = listOf(
+		Vec2(0, -1),  // ↑
+		Vec2(-1, -1), // ↖
+		Vec2(-1, 0),  // ←
+		Vec2(-1, 1),  // ↙
+		Vec2(0, 1),   // ↓
+		Vec2(1, 1),   // ↘
+		Vec2(1, 0),   // →
+		Vec2(1, -1)   // ↗
+	)
 
-    // helper function to get a list of coordinates starting at a given point
-    // and continuing along a given direction
-    fun getCoordsAlongRay(origin: Vec2, direction: Vec2): List<Vec2> {
-        var count = 0
-        val coords: MutableList<Vec2> = mutableListOf()
-        while (true) {
-            val x = origin.x + count * direction.x
-            val y = origin.y + count * direction.y
-            if (x in 0..7 && y in 0..7)
-                coords.add(Vec2(x, y))
-            else
-                break
-            count++
-        }
-        return coords
-    }
+	private val validMoves: List<List<Boolean>>
+		get() =
+			grid.mapIndexed { y, row ->
+				row.mapIndexed { x, _ ->
+					val updates = getUpdates(turn, x, y)
+					updates.count() > 1
+				}
+			}
 
-    // get the list of all coords to change, starting with the player's move
-    val captures = directions.fold(setOf(Vec2(x0, y0))) { acc, dir ->
-        // find the first coord with a piece belonging to the player
-        val origin = Vec2(x0 + dir.x, y0 + dir.y)
-        val allCoords = getCoordsAlongRay(origin, dir)
-        val playerIndex = allCoords.indexOfFirst( { state.grid[it.y][it.x] == state.turn } )
+	// this represents a state where the new current player has no moves,
+	// and requires special handling from the caller:
+	// - render the board as-is
+	// - indicate to the players what's happening
+	// - skip that player's turn (submit a new state with turn *= -1)
+	val skipTurn: Boolean
+		get() = validMoves.flatten().filter { it }.isEmpty()
 
-        // if the move is invalid, don't capture anything, otherwise capture
-        // everything between the player's move and their opposing piece
-        val emptyIndex = allCoords.indexOfFirst({
-            state.grid[it.y][it.x] == 0
-        })
-        val capturedCoords =
-            if (playerIndex < 1 || (emptyIndex >= 0 && emptyIndex < playerIndex))
-                listOf()
-            else
-                allCoords.take((playerIndex))
-        acc union capturedCoords
-    }.distinct()
+	// the game is over when neither player has any valid moves
+	val gameOver: Boolean
+		get() = false
 
-    // return a new state with all captured pieces (including the player's move)
-    // toggled to the player, and the turn toggled to the other player
-    return BoardState(state.turn * -1, state.grid.mapIndexed { y, row ->
-        row.mapIndexed { x, it ->
-            if (captures.contains(Vec2(x, y))) state.turn else it
-        }
-    })
+
+	// create a new state from an old one and the player's move coordinates
+	fun stateFromMove(x0: Int, y0: Int): BoardState {
+		// get a set of all updates to make, rejecting the player's move if it
+		// doesn't capture any of the opponent's pieces
+		val allUpdates = getUpdates(turn, x0, y0)
+		val updates = if (allUpdates.count() > 1) allUpdates else setOf()
+
+		return BoardState(
+			// toggle whose turn it is
+			turn * -1,
+
+			// merge the previous board with the updates
+			grid.mapIndexed { y, row ->
+				row.mapIndexed { x, it ->
+					if (updates.contains(Vec2(x, y))) turn else it
+				}
+			},
+		)
+	}
+
+	fun render() {
+		// TODO: use a real templating engine instead of this mess
+		val rendered =
+			grid.mapIndexed { y, row ->
+				"""<div class="row">""" +
+					row.mapIndexed { x, item ->
+						val valid = validMoves[y][x]
+						val link = """<a onclick="reversi.moveTo(event, this)" class="move" href="?x=$x&y=$y#board" data-x="$x" data-y="$y">"""
+						"""
+							${if (valid) link else ""}
+							<div class="square ${if (valid) "valid" else ""}">
+								<div class="piece p${item} ${if (item != 0) "pip" else ""}"></div>
+							</div>
+							${if (valid) "</a>" else ""}
+						"""
+					}.joinToString("") +
+				"""</div>"""
+			}.joinToString("")
+
+		document.getElementById("board")?.innerHTML = rendered
+	}
+
+	// get a list of board coordinates starting at a given point and continuing
+	// along a given direction
+	private fun getCoordsAlongRay(origin: Vec2, direction: Vec2): List<Vec2> {
+		var count = 0
+		val output: MutableList<Vec2> = mutableListOf()
+		while (true) {
+			val x = origin.x + count * direction.x
+			val y = origin.y + count * direction.y
+			if (x in 0..7 && y in 0..7)
+				output.add(Vec2(x, y))
+			else
+				break
+			count++
+		}
+		return output
+	}
+
+	// get all pieces to update from a given move
+	private fun getUpdates(turn: Int, x: Int, y: Int): List<Vec2> {
+		// don't allow moving to a space already occupied
+		if (grid[y][x] != 0) return listOf()
+
+		// collect coordinates in all directions, starting with where the player moved
+		return directions.fold( listOf(Vec2(x, y)) ) { acc, dir ->
+			// in the current direction, find the next coordinate of a piece belonging
+			// to the current player
+			val newOrigin = Vec2(x + dir.x, y + dir.y)
+			val allCoords = getCoordsAlongRay(newOrigin, dir)
+			val playerIndex = allCoords.indexOfFirst { grid[it.y][it.x] == turn }
+
+			// the move is valid only if the player has a piece in that direction
+			// and there are no empty squares before it
+			val emptyIndex = allCoords.indexOfFirst { grid[it.y][it.x] == 0 }
+			val valid = playerIndex > 0 && !(emptyIndex in 0 ..< playerIndex)
+
+			// any coordinates left in that range are to be captured, so add them
+			// to the accumulated list
+			val capturedCoords = if (valid) allCoords.take(playerIndex) else listOf()
+			acc + capturedCoords
+		}.distinct()
+	}
 }
 
-fun getValidMoves(state: BoardState): List<List<Boolean>> {
-    // check whether a move is valid within a given state
-    fun isValid(state: BoardState, x0: Int, y0: Int): Boolean {
-        // coords already in use are invalid
-        if (state.grid[y0][x0] != 0) return false
-
-        // tentatively try the move and count how many pieces differ between it and
-        // the current state; the move is valid if and only if the count is greater
-        // than 1 (i.e. the move must capture some of the opponent's pieces)
-        val potentialState = newState(state, x0, y0)
-        var diffs = 0
-        for (y in 0..<8) {
-            for (x in 0..<8) {
-                if (state.grid[y][x] != potentialState.grid[y][x]) diffs++
-            }
-        }
-        return diffs > 1
-    }
-
-    return state.grid.mapIndexed { y, row ->
-        List(row.size) { x -> isValid(state, x, y) }
-    }
-}
-
-fun hasValidMoves(state: BoardState): Boolean {
-    return getValidMoves(state).flatten().filter { it }.isNotEmpty()
-}
-
-fun render(state: BoardState) {
-    // TODO: use a real templating engine instead of this mess
-    val validMoves = getValidMoves(state)
-    val rendered =
-        state.grid.mapIndexed { y, row ->
-            """<div class="row">""" +
-                    row.mapIndexed { x, item ->
-                        val valid = validMoves[y][x]
-                        val link = """<a onclick="reversi.moveTo(event, this)" class="move" href="?x=$x&y=$y#board" data-x="$x" data-y="$y">"""
-                        """
-					${if (valid) link else ""}
-					<div class="square ${if (valid) "valid" else ""}">
-						<div class="piece p${item} ${if (item != 0) "pip" else ""}"></div>
-					</div>
-					${if (valid) "</a>" else ""}
-				"""
-                    }.joinToString("") +
-                    """</div>"""
-        }.joinToString("")
-
-    document.getElementById("board")?.innerHTML = rendered;
-}
