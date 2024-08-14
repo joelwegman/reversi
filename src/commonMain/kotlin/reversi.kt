@@ -5,12 +5,11 @@ class BoardState (
 	// which player's turn is it? 1 or -1
 	private val turn: Int = 1,
 
-	// this represents the board, where 0 is an empty square
-	// NOTE: this is indexed as board[y][x] rather than board[x][y],
-	// which means that values can be manually supplied to the
-	// constructor in the same layout in source code as will be shown
-	// in the ui and when converted to a string, e.g. for logging
-	// or println debugging
+	// this represents the game board, where 0 is an empty square
+	// NOTE: this is indexed as board[y][x] rather than board[x][y]
+	// so values can be manually supplied to the constructor in the same layout
+	// in source code as will be shown in the ui and when converted to a string,
+	// which also makes logging/debugging easier
 	val board: List<List<Int>> = listOf(
 		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
@@ -22,34 +21,7 @@ class BoardState (
 		listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 	),
 ) {
-	// the cardinal directions with arrows showing screen-space orientation
-	private val directions: List<Vec2> = listOf(
-		Vec2(0, -1),  // ↑
-		Vec2(-1, -1), // ↖
-		Vec2(-1, 0),  // ←
-		Vec2(-1, 1),  // ↙
-		Vec2(0, 1),   // ↓
-		Vec2(1, 1),   // ↘
-		Vec2(1, 0),   // →
-		Vec2(1, -1)   // ↗
-	)
-
-	// valid moves are those that would capture an opponent's piece, i.e. moving
-	// moving there would update more than just the one piece the player moved
-	private val validMoves: List<List<Boolean>>
-		get() =
-			board.mapIndexed { y, row ->
-				row.mapIndexed { x, _ ->
-					val updates = getUpdates(turn, x, y)
-					updates.count() > 1
-				}
-			}
-
-	// this represents a state where the new current player has no moves,
-	// and requires special handling from the caller:
-	// - render the board as-is
-	// - indicate to the players what's happening
-	// - skip that player's turn (submit a new state with turn *= -1) (TODO: implement that)
+	// does the current player have any moves available?
 	val hasMoves: Boolean
 		get() = validMoves.flatten().any { it }
 
@@ -57,16 +29,13 @@ class BoardState (
 	val gameOver: Boolean
 		get() = !hasMoves && !BoardState(turn * -1, board).hasMoves
 
-	private val scores: List<Int>
-		get() = listOf(1, -1).map { player ->
-			board.flatten().filter { it == player }.count()
-		}
-
+	// skip this player's turn (for use when the player has no moves)
 	fun skipTurn(): BoardState {
 		return BoardState(turn * -1, board)
 	}
 
 	// create a new state from an old one and the player's move coordinates
+	// TODO: make this a constructor?
 	fun stateFromMove(x0: Int, y0: Int): BoardState {
 		// get a set of all updates to make, rejecting the player's move if it
 		// doesn't capture any of the opponent's pieces
@@ -86,6 +55,7 @@ class BoardState (
 		)
 	}
 
+	// render the board into HTML
 	fun toHTML(): String {
 		// TODO: use a real templating engine instead of this mess
 		return """<div id="score">
@@ -131,6 +101,38 @@ class BoardState (
 				}
 			"</div>"
 	}
+
+	////
+	//// private members
+	////
+
+	// the cardinal directions, with arrows showing screen-space orientation
+	private val directions: List<Vec2> = listOf(
+		Vec2(0, -1),  // ↑
+		Vec2(-1, -1), // ↖
+		Vec2(-1, 0),  // ←
+		Vec2(-1, 1),  // ↙
+		Vec2(0, 1),   // ↓
+		Vec2(1, 1),   // ↘
+		Vec2(1, 0),   // →
+		Vec2(1, -1)   // ↗
+	)
+
+	// valid moves are those that would capture an opponent's piece, i.e. moving
+	// moving there would update more than just the one piece the player moved
+	private val validMoves: List<List<Boolean>>
+		get() =
+			board.mapIndexed { y, row ->
+				row.mapIndexed { x, _ ->
+					val updates = getUpdates(turn, x, y)
+					updates.count() > 1
+				}
+			}
+
+	private val scores: List<Int>
+		get() = listOf(1, -1).map { player ->
+			board.flatten().filter { it == player }.count()
+		}
 
 	// get a list of board coordinates starting at a given point and continuing
 	// along a given direction
