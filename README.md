@@ -1,11 +1,11 @@
 # Reversi
 This is a simple project I'm using to learn Kotlin and a few other technologies.
+It's a work in progress, and since it's my first Kotlin project it's likely to
+not be the most canonical Kotlin style yet.  PRs are welcome.
 
 ## Build/run instructions
-Run this command:
-   `./gradlew -t jsRun`
-
-It should build and open a new browser window.
+`./gradlew jsRun` should build and open the project in a new browser tab.
+`./gradlew -t jsRun` should do the same, rebuilding/reloading as changes are made.
 
 ## Tests
 I ran through the steps outlined in https://kotlinlang.org/docs/js-running-tests.html,
@@ -15,6 +15,4 @@ didn't work either (in part because the video published on 2021-01-01 references
 that doesn't exist in my IntelliJ installation).
 
 Fortunately, I was able to get Kotest working instead.
-
-Run this command to run the tests:
-   `./gradlew -t check`
+`./gradlew check` runs the tests.

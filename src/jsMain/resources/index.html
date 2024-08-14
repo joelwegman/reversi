@@ -7,13 +7,13 @@
 	<!-- TODO: move this to a .css file -->
 	<!-- TODO: use CSS variables -->
 	<!-- TODO: use-prefered-color-scheme -->
-	<!-- TODO: make it look less like programmer art -->
+	<!-- TODO: make it look less like quick developer design -->
 	<style>
 		#game {
 			display: grid;
 			grid-template-areas: "score" "board";
 			justify-content: center;
-			margin-top: 12vh;
+			margin-top: 10vh;
 			margin-left: auto;
 			margin-right: auto;
 
@@ -38,6 +38,7 @@
 				grid-template-columns: 1fr 1fr;
 				width: 50%;
 				margin: auto;
+				padding-bottom: 1rem;
 
 				.player {
 					font-size: 6vh;
@@ -83,6 +84,24 @@
 							border: 1px solid yellow;
 							cursor: default;
 						}
+					}
+				}
+			}
+
+			#message {
+				font-size: 6vh;
+				margin-top: 1rem;
+
+				.pip {
+					margin-right: 1rem;
+				}
+
+				a {
+					text-decoration: underline;
+					cursor: pointer;
+
+					&.restart {
+						margin-left: 1rem;
 					}
 				}
 			}

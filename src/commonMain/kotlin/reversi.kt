@@ -1,10 +1,8 @@
-import kotlinx.browser.document
-
 // convenience class for using .x and .y on points/vectors
 data class Vec2 (var x: Int, var y: Int)
 
 class BoardState (
-	// which player's turn is it? 1 (white) or -1 (black)
+	// which player's turn is it? 1 or -1
 	private val turn: Int = 1,
 
 	// this represents the board, where 0 is an empty square
@@ -52,17 +50,21 @@ class BoardState (
 	// - render the board as-is
 	// - indicate to the players what's happening
 	// - skip that player's turn (submit a new state with turn *= -1) (TODO: implement that)
-	val skipTurn: Boolean
-		get() = validMoves.flatten().none { it }
+	val hasMoves: Boolean
+		get() = validMoves.flatten().any { it }
 
 	// the game is over when neither player has any valid moves
 	val gameOver: Boolean
-		get() = skipTurn && BoardState(turn * -1, board).skipTurn
+		get() = !hasMoves && !BoardState(turn * -1, board).hasMoves
 
 	private val scores: List<Int>
 		get() = listOf(1, -1).map { player ->
 			board.flatten().filter { it == player }.count()
 		}
+
+	fun skipTurn(): BoardState {
+		return BoardState(turn * -1, board)
+	}
 
 	// create a new state from an old one and the player's move coordinates
 	fun stateFromMove(x0: Int, y0: Int): BoardState {
@@ -84,15 +86,14 @@ class BoardState (
 		)
 	}
 
-	fun render() {
+	fun toHTML(): String {
 		// TODO: use a real templating engine instead of this mess
-		val rendered =
-			"""<div id="score">
-				<div class="player p0 ${if (turn == 1) "active" else ""}">
+		return """<div id="score">
+				<div class="player p0 ${if (!gameOver && turn == 1) "active" else ""}">
 					<div class="pip p1"></div>
 					<div class="score">${scores[0]}</div>
 				</div>
-				<div class="player p1 ${if (turn == -1) "active" else ""}">
+				<div class="player p1 ${if (!gameOver && turn == -1) "active" else ""}">
 					<div class="pip p-1"></div>
 					<div class="score">${scores[1]}</div>
 				</div>
@@ -114,10 +115,21 @@ class BoardState (
 					}.joinToString("") +
 				"</div>"
 			}.joinToString("") +
-			"</div>"
+			"</div>" +
 
-		// TODO: move this part out, make render only return a string
-		document.getElementById("game")?.innerHTML = rendered
+			"""<div id="message">""" +
+				if (gameOver) {
+					when {
+						scores[0] > scores[1] -> """<div class="pip p1"></div>wins!"""
+						scores[1] > scores[0] -> """<div class="pip p-1"></div>wins!"""
+						else -> "Tied game!"
+					} + """<a class="restart" onclick="reversi.restart()">Restart</a>"""
+				} else if (!hasMoves) {
+					"""You have no moves. <a onclick="reversi.skipTurn()" href="?skip#board">Skip your turn.</a>"""
+				} else {
+					""
+				}
+			"</div>"
 	}
 
 	// get a list of board coordinates starting at a given point and continuing

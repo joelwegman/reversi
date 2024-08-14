@@ -1,14 +1,12 @@
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-// TODO: expand test coverage
-
 class ReversiTest : FunSpec({
-	test("don't skip turn") {
-		BoardState().skipTurn.shouldBe(false)
+	test("initial board state has moves") {
+		BoardState().hasMoves.shouldBe(true)
 	}
 
-	test("skip turn") {
+	test("trivial no moves case") {
 		BoardState(
 			board = listOf(
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
@@ -20,14 +18,29 @@ class ReversiTest : FunSpec({
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
 			),
-		).skipTurn.shouldBe(true)
+		).hasMoves.shouldBe(false)
 	}
 
-	test("moves remain") {
+	test("simple no moves case") {
+		BoardState(
+			board = listOf(
+				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+				listOf( 0,  0,  0,  1,  1,  1,  0,  0),
+				listOf( 0,  0,  0,  1, -1,  1,  0,  0),
+				listOf( 0,  0,  0,  1,  1,  1,  0,  0),
+				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
+			),
+		).hasMoves.shouldBe(false)
+	}
+
+	test("initial state is not game over") {
 		BoardState().gameOver.shouldBe(false)
 	}
 
-	test("game over") {
+	test("simple game over case") {
 		BoardState(
 			board = listOf(
 				listOf( 0,  0,  0,  0,  0,  0,  0,  0),
