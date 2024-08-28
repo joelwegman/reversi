@@ -1,6 +1,4 @@
-import kotlinx.browser.*
 import kotlinx.html.*
-import kotlinx.html.dom.*
 import kotlinx.html.stream.*
 
 // convenience class for using .x and .y on points/vectors
