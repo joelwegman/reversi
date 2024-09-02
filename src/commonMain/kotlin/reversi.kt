@@ -61,7 +61,7 @@ class BoardState (
 	// render the board into HTML
 	fun toHTML(): String {
 		return buildString { appendHTML().
-			div {
+			div(classes = "subsection") {
 				id = "score"
 				div(classes = "player " + if (!gameOver && turn == 1) "active" else "") {
 					div(classes = "pip p1")
@@ -73,7 +73,7 @@ class BoardState (
 				}
 			}
 
-			appendHTML().div {
+			appendHTML().div(classes = "subsection") {
 				id = "board"
 				board.mapIndexed { y, row ->
 					div(classes = "row") {
@@ -94,7 +94,7 @@ class BoardState (
 				}
 			}
 
-			appendHTML().div {
+			appendHTML().div(classes = "subsection") {
 				id = "message"
 				if (gameOver) {
 					when {
@@ -110,13 +110,13 @@ class BoardState (
 					}
 					a(classes = "restart") {
 						onClick = "reversi.restart()"
-						+ "Restart"
+						div(classes = "text") { + "Restart" }
 					}
 				} else if (!hasMoves) {
-					+ "You have no moves."
+					div(classes="text") { + "You have no moves." }
 					a("?skip#board") {
 						onClick = "reversi.skipTurn(event)"
-						+ "Skip your turn."
+						div(classes="text") { + "Skip your turn." }
 					}
 				} else {
 					""
